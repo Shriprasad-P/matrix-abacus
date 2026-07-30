@@ -22,7 +22,8 @@ class AttendanceCalendar extends StatelessWidget {
 
     final byDate = {
       for (final d in summary.days)
-        if (d.date.year == focus.year && d.date.month == focus.month) d.date.day: d.status,
+        if (d.date.year == focus.year && d.date.month == focus.month)
+          d.date.day: d.status,
     };
 
     return Container(
@@ -43,7 +44,9 @@ class AttendanceCalendar extends StatelessWidget {
               const Spacer(),
               Text(
                 '${(summary.percentage * 100).round()}% present',
-                style: Theme.of(context).textTheme.labelLarge?.copyWith(color: AppColors.success),
+                style: Theme.of(
+                  context,
+                ).textTheme.labelLarge?.copyWith(color: AppColors.success),
               ),
             ],
           ),
@@ -53,7 +56,10 @@ class AttendanceCalendar extends StatelessWidget {
                 .map(
                   (d) => Expanded(
                     child: Center(
-                      child: Text(d, style: Theme.of(context).textTheme.labelSmall),
+                      child: Text(
+                        d,
+                        style: Theme.of(context).textTheme.labelSmall,
+                      ),
                     ),
                   ),
                 )
@@ -93,8 +99,18 @@ class AttendanceCalendar extends StatelessWidget {
 
   String _monthLabel(DateTime d) {
     const months = [
-      'January', 'February', 'March', 'April', 'May', 'June',
-      'July', 'August', 'September', 'October', 'November', 'December',
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
     ];
     return '${months[d.month - 1]} ${d.year}';
   }
@@ -135,9 +151,11 @@ class _DayCell extends StatelessWidget {
         child: Text(
           '$day',
           style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                color: status == AttendanceStatus.none ? AppColors.textTertiary : color,
-                fontWeight: FontWeight.w700,
-              ),
+            color: status == AttendanceStatus.none
+                ? AppColors.textTertiary
+                : color,
+            fontWeight: FontWeight.w700,
+          ),
         ),
       ),
     );
@@ -155,7 +173,11 @@ class _Legend extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Container(width: 10, height: 10, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+        Container(
+          width: 10,
+          height: 10,
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+        ),
         const SizedBox(width: 6),
         Text(label, style: Theme.of(context).textTheme.labelSmall),
       ],
@@ -181,34 +203,46 @@ class ProgressChart extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Weekly activity', style: Theme.of(context).textTheme.titleMedium),
+          Text(
+            'Weekly activity',
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
           const SizedBox(height: 4),
-          Text('Minutes practiced', style: Theme.of(context).textTheme.bodySmall),
+          Text(
+            'Minutes practiced',
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
           const SizedBox(height: 16),
           SizedBox(
-            height: 160,
+            height: 140,
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: points.map((p) {
-                final h = (p.minutes / max) * 96;
+                // Leave room inside the fixed chart height for both value and day labels.
+                final h = (p.minutes / max) * 82;
                 return Expanded(
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 4),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.end,
-                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        Text('${p.minutes}', style: Theme.of(context).textTheme.labelSmall),
+                        Text(
+                          '${p.minutes}',
+                          style: Theme.of(context).textTheme.labelSmall,
+                        ),
                         const SizedBox(height: 4),
                         Container(
-                          height: h.clamp(8, 96),
+                          height: h.clamp(8, 82),
                           decoration: BoxDecoration(
                             color: AppColors.primary.withValues(alpha: 0.85),
                             borderRadius: BorderRadius.circular(8),
                           ),
                         ),
                         const SizedBox(height: 6),
-                        Text(p.label, style: Theme.of(context).textTheme.labelSmall),
+                        Text(
+                          p.label,
+                          style: Theme.of(context).textTheme.labelSmall,
+                        ),
                       ],
                     ),
                   ),

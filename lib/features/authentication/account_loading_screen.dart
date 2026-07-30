@@ -8,10 +8,12 @@ class AccountLoadingScreen extends StatefulWidget {
   const AccountLoadingScreen({
     super.key,
     required this.firstTime,
+    required this.mobile,
     required this.onReady,
   });
 
   final bool firstTime;
+  final String mobile;
   final VoidCallback onReady;
 
   @override
@@ -26,7 +28,9 @@ class _AccountLoadingScreenState extends State<AccountLoadingScreen> {
   }
 
   Future<void> _load() async {
-    await AppState.read(context).bootstrapAccount(firstTime: widget.firstTime);
+    await AppState.read(
+      context,
+    ).bootstrapAccount(mobile: widget.mobile, firstTime: widget.firstTime);
     if (!mounted) return;
     widget.onReady();
   }
@@ -46,7 +50,10 @@ class _AccountLoadingScreenState extends State<AccountLoadingScreen> {
                 child: CircularProgressIndicator(strokeWidth: 3),
               ),
               const SizedBox(height: AppSpacing.xl),
-              Text('Setting up your account', style: Theme.of(context).textTheme.headlineSmall),
+              Text(
+                'Setting up your account',
+                style: Theme.of(context).textTheme.headlineSmall,
+              ),
               const SizedBox(height: 8),
               Text(
                 'Loading children, progress, and practice…',
@@ -61,7 +68,7 @@ class _AccountLoadingScreenState extends State<AccountLoadingScreen> {
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: Text(
-                  'This is a local mock load — no network calls are made.',
+                  'Loading your account details securely.',
                   style: Theme.of(context).textTheme.bodySmall,
                   textAlign: TextAlign.center,
                 ),

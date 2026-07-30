@@ -17,12 +17,14 @@ class ChildSetupScreen extends StatefulWidget {
 class _ChildSetupScreenState extends State<ChildSetupScreen> {
   final _name = TextEditingController();
   final _className = TextEditingController(text: 'Class 2');
+  final _schoolName = TextEditingController();
   int _age = 7;
 
   @override
   void dispose() {
     _name.dispose();
     _className.dispose();
+    _schoolName.dispose();
     super.dispose();
   }
 
@@ -38,6 +40,7 @@ class _ChildSetupScreenState extends State<ChildSetupScreen> {
       name: _name.text.trim(),
       age: _age,
       className: _className.text.trim(),
+      schoolName: _schoolName.text.trim(),
       avatarColor: 0xFF5B67C7,
       avatarEmoji: '🌟',
       currentLevel: 'Level 1 · Getting Started',
@@ -60,7 +63,10 @@ class _ChildSetupScreenState extends State<ChildSetupScreen> {
         child: ListView(
           padding: const EdgeInsets.all(AppSpacing.screenPadding),
           children: [
-            Text('First-time setup', style: Theme.of(context).textTheme.headlineMedium),
+            Text(
+              'First-time setup',
+              style: Theme.of(context).textTheme.headlineMedium,
+            ),
             const SizedBox(height: 8),
             Text(
               'Create a profile so practice and progress stay organised.',
@@ -77,6 +83,15 @@ class _ChildSetupScreenState extends State<ChildSetupScreen> {
               controller: _className,
               decoration: const InputDecoration(labelText: 'Class / grade'),
             ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _schoolName,
+              textCapitalization: TextCapitalization.words,
+              decoration: const InputDecoration(
+                labelText: 'School name (optional)',
+                hintText: 'Enter school name if you want to share it',
+              ),
+            ),
             const SizedBox(height: 16),
             Text('Age: $_age', style: Theme.of(context).textTheme.titleMedium),
             Slider(
@@ -89,11 +104,6 @@ class _ChildSetupScreenState extends State<ChildSetupScreen> {
             ),
             const SizedBox(height: AppSpacing.xl),
             AppPrimaryButton(label: 'Continue to home', onPressed: _save),
-            const SizedBox(height: 12),
-            AppSecondaryButton(
-              label: 'Skip — use sample children',
-              onPressed: widget.onDone,
-            ),
           ],
         ),
       ),

@@ -32,20 +32,53 @@ class MoreScreen extends StatelessWidget {
       child: ListView(
         padding: const EdgeInsets.all(AppSpacing.screenPadding),
         children: [
-          const PageHeader(title: 'More', subtitle: 'Account, learning history, and support.'),
-          _tile(context, Icons.person_outline_rounded, 'Parent profile & settings', onOpenSettings),
+          const PageHeader(
+            title: 'More',
+            subtitle: 'Account, learning history, and support.',
+          ),
+          _tile(
+            context,
+            Icons.person_outline_rounded,
+            'Parent profile & settings',
+            onOpenSettings,
+          ),
           _tile(context, Icons.payments_outlined, 'Payments', onOpenPayments),
-          _tile(context, Icons.workspace_premium_outlined, 'Certificates', onOpenCertificates),
+          _tile(
+            context,
+            Icons.workspace_premium_outlined,
+            'Certificates',
+            onOpenCertificates,
+          ),
           _tile(context, Icons.emoji_events_outlined, 'Results', onOpenResults),
-          _tile(context, Icons.event_available_outlined, 'Attendance', onOpenAttendance),
-          _tile(context, Icons.menu_book_outlined, 'Courses & levels', onOpenCourses),
-          _tile(context, Icons.notifications_outlined, 'Announcements', onOpenAnnouncements),
+          _tile(
+            context,
+            Icons.event_available_outlined,
+            'Attendance',
+            onOpenAttendance,
+          ),
+          _tile(
+            context,
+            Icons.menu_book_outlined,
+            'Courses & levels',
+            onOpenCourses,
+          ),
+          _tile(
+            context,
+            Icons.notifications_outlined,
+            'Announcements',
+            onOpenAnnouncements,
+          ),
         ],
       ),
     );
   }
 
-  Widget _tile(BuildContext context, IconData icon, String title, VoidCallback onTap) {
+  Widget _tile(
+    BuildContext context,
+    IconData icon,
+    String title,
+    VoidCallback onTap,
+  ) {
     return ListTile(
       contentPadding: EdgeInsets.zero,
       leading: Container(
@@ -64,7 +97,7 @@ class MoreScreen extends StatelessWidget {
   }
 }
 
-class SettingsScreen extends StatelessWidget {
+class SettingsScreen extends StatefulWidget {
   const SettingsScreen({
     super.key,
     required this.onPrivacy,
@@ -79,6 +112,55 @@ class SettingsScreen extends StatelessWidget {
   final VoidCallback onLogout;
 
   @override
+  State<SettingsScreen> createState() => _SettingsScreenState();
+}
+
+class _SettingsScreenState extends State<SettingsScreen> {
+  late final TextEditingController _name;
+  late final TextEditingController _email;
+
+  @override
+  void initState() {
+    super.initState();
+    final parent = AppState.read(context).parent;
+    _name = TextEditingController(text: parent?.name ?? '');
+    _email = TextEditingController(text: parent?.email ?? '');
+  }
+
+  @override
+  void dispose() {
+    _name.dispose();
+    _email.dispose();
+    super.dispose();
+  }
+
+  void _saveDetails() {
+    final parent = AppState.read(context).parent;
+    final name = _name.text.trim();
+    final email = _email.text.trim();
+    if (parent == null || name.isEmpty) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Parent name is required.')));
+      return;
+    }
+    if (email.isNotEmpty && !email.contains('@')) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Enter a valid email address or leave it blank.'),
+        ),
+      );
+      return;
+    }
+    AppState.read(
+      context,
+    ).updateParent(parent.copyWith(name: name, email: email));
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Parent details updated.')));
+  }
+
+  @override
   Widget build(BuildContext context) {
     final state = AppState.of(context);
     final parent = state.parent;
@@ -89,9 +171,28 @@ class SettingsScreen extends StatelessWidget {
         padding: const EdgeInsets.all(AppSpacing.screenPadding),
         children: [
           if (parent != null) ...[
-            Text(parent.name, style: Theme.of(context).textTheme.headlineSmall),
             Text(parent.mobile, style: Theme.of(context).textTheme.bodyMedium),
-            Text(parent.email, style: Theme.of(context).textTheme.bodySmall),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _name,
+              textCapitalization: TextCapitalization.words,
+              decoration: const InputDecoration(
+                labelText: 'Parent / guardian name',
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _email,
+              keyboardType: TextInputType.emailAddress,
+              decoration: const InputDecoration(
+                labelText: 'Email address (optional)',
+              ),
+            ),
+            const SizedBox(height: 12),
+            AppPrimaryButton(
+              label: 'Save parent details',
+              onPressed: _saveDetails,
+            ),
             const SizedBox(height: 20),
           ],
           Text('Notifications', style: Theme.of(context).textTheme.titleMedium),
@@ -128,19 +229,19 @@ class SettingsScreen extends StatelessWidget {
             contentPadding: EdgeInsets.zero,
             title: const Text('Privacy policy'),
             trailing: const Icon(Icons.chevron_right_rounded),
-            onTap: onPrivacy,
+            onTap: widget.onPrivacy,
           ),
           ListTile(
             contentPadding: EdgeInsets.zero,
             title: const Text('Terms and conditions'),
             trailing: const Icon(Icons.chevron_right_rounded),
-            onTap: onTerms,
+            onTap: widget.onTerms,
           ),
           ListTile(
             contentPadding: EdgeInsets.zero,
             title: const Text('Help and support'),
             trailing: const Icon(Icons.chevron_right_rounded),
-            onTap: onHelp,
+            onTap: widget.onHelp,
           ),
           const SizedBox(height: 24),
           AppSecondaryButton(
@@ -150,11 +251,12 @@ class SettingsScreen extends StatelessWidget {
               final ok = await showAppConfirmDialog(
                 context: context,
                 title: 'Log out?',
-                message: 'You can sign back in anytime with your mobile number.',
+                message:
+                    'You can sign back in anytime with your mobile number.',
                 confirmLabel: 'Log out',
                 isDestructive: true,
               );
-              if (ok) onLogout();
+              if (ok) widget.onLogout();
             },
           ),
           const SizedBox(height: 16),

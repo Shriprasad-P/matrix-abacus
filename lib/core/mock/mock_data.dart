@@ -19,6 +19,14 @@ abstract final class MockData {
     email: 'priya.sharma@email.com',
   );
 
+  static final Parent admin = Parent(
+    id: 'admin1',
+    name: 'Matrix Admin',
+    mobile: '+91 99999 99999',
+    email: 'admin@matrixabacus.com',
+    role: 'admin',
+  );
+
   static final List<ChildProfile> children = [
     ChildProfile(
       id: 'c1',

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../core/constants/app_constants.dart';
+import '../core/repositories/matrix_repository.dart';
+import '../features/admin/admin_dashboard_screen.dart';
 import '../core/state/app_state.dart';
 import '../features/announcements/announcements_screen.dart';
 import '../features/attendance/attendance_screen.dart';
@@ -8,6 +10,7 @@ import '../features/authentication/account_loading_screen.dart';
 import '../features/authentication/child_setup_screen.dart';
 import '../features/authentication/login_screen.dart';
 import '../features/authentication/otp_screen.dart';
+import '../features/authentication/parent_setup_screen.dart';
 import '../features/certificates/certificates_screen.dart';
 import '../features/children/child_profile_screen.dart';
 import '../features/courses/courses_screen.dart';
@@ -42,7 +45,8 @@ class AppRouter {
       case AppRoutes.welcome:
         return _page(
           WelcomeScreen(
-            onGetStarted: () => _nav.pushNamed(AppRoutes.login, arguments: true),
+            onGetStarted: () =>
+                _nav.pushNamed(AppRoutes.login, arguments: true),
             onLogin: () => _nav.pushNamed(AppRoutes.login, arguments: false),
           ),
           settings,
@@ -51,10 +55,19 @@ class AppRouter {
         final firstTime = settings.arguments as bool? ?? false;
         return _page(
           LoginScreen(
-            onContinue: (mobile) => _nav.pushNamed(
-              AppRoutes.otp,
-              arguments: {'mobile': mobile, 'firstTime': firstTime},
-            ),
+            onContinue: (mobile) async {
+              final challenge = await AppState.read(
+                _nav.context,
+              ).requestOtp(mobile);
+              _nav.pushNamed(
+                AppRoutes.otp,
+                arguments: {
+                  'mobile': mobile,
+                  'firstTime': firstTime,
+                  'challenge': challenge,
+                },
+              );
+            },
           ),
           settings,
         );
@@ -62,28 +75,49 @@ class AppRouter {
         final args = settings.arguments as Map<String, dynamic>? ?? {};
         final mobile = args['mobile'] as String? ?? '';
         final firstTime = args['firstTime'] as bool? ?? false;
+        final challenge = args['challenge'] as OtpChallenge;
         return _page(
           OtpScreen(
             mobile: mobile,
+            challenge: challenge,
             onVerified: () => _nav.pushReplacementNamed(
               AppRoutes.accountLoading,
-              arguments: firstTime,
+              arguments: {'firstTime': firstTime, 'mobile': mobile},
             ),
           ),
           settings,
         );
       case AppRoutes.accountLoading:
-        final firstTime = settings.arguments as bool? ?? false;
+        final args = settings.arguments as Map<String, dynamic>? ?? {};
+        final firstTime = args['firstTime'] as bool? ?? false;
+        final mobile = args['mobile'] as String? ?? '';
         return _page(
           AccountLoadingScreen(
             firstTime: firstTime,
+            mobile: mobile,
             onReady: () {
-              if (firstTime) {
+              final state = AppState.read(_nav.context);
+              if (state.isAdmin) {
+                _nav.pushNamedAndRemoveUntil(
+                  AppRoutes.adminDashboard,
+                  (_) => false,
+                );
+              } else if (firstTime ||
+                  state.parent?.name.trim().isEmpty == true) {
+                _nav.pushReplacementNamed(AppRoutes.parentSetup);
+              } else if (state.children.isEmpty) {
                 _nav.pushReplacementNamed(AppRoutes.childSetup);
               } else {
                 _nav.pushNamedAndRemoveUntil(AppRoutes.shell, (_) => false);
               }
             },
+          ),
+          settings,
+        );
+      case AppRoutes.parentSetup:
+        return _page(
+          ParentSetupScreen(
+            onDone: () => _nav.pushReplacementNamed(AppRoutes.childSetup),
           ),
           settings,
         );
@@ -101,8 +135,23 @@ class AppRouter {
         );
       case AppRoutes.shell:
         return _page(_buildShell(), settings);
+      case AppRoutes.adminDashboard:
+        return _page(
+          AdminDashboardScreen(
+            onLogout: () {
+              AppState.read(_nav.context).logout();
+              _nav.pushNamedAndRemoveUntil(AppRoutes.welcome, (_) => false);
+            },
+          ),
+          settings,
+        );
       case AppRoutes.childProfile:
-        return _page(const ChildProfileScreen(), settings);
+        return _page(
+          ChildProfileScreen(
+            onAddChild: () => _nav.pushNamed(AppRoutes.childSetup),
+          ),
+          settings,
+        );
       case AppRoutes.attendance:
         return _page(const AttendanceScreen(), settings);
       case AppRoutes.courses:
@@ -142,10 +191,7 @@ class AppRouter {
           settings,
         );
       case AppRoutes.paymentSuccess:
-        return _page(
-          PaymentSuccessScreen(onDone: () => _nav.pop()),
-          settings,
-        );
+        return _page(PaymentSuccessScreen(onDone: () => _nav.pop()), settings);
       case AppRoutes.settings:
         return _page(
           SettingsScreen(
@@ -189,7 +235,8 @@ class AppRouter {
       case AppRoutes.practiceIntro:
         return _page(
           PracticeIntroScreen(
-            onStart: () => _nav.pushReplacementNamed(AppRoutes.practiceQuestion),
+            onStart: () =>
+                _nav.pushReplacementNamed(AppRoutes.practiceQuestion),
           ),
           settings,
         );
@@ -197,7 +244,8 @@ class AppRouter {
         return _page(
           PracticeQuestionScreen(
             onPaused: () => _nav.pushNamed(AppRoutes.practicePause),
-            onCompleted: () => _nav.pushReplacementNamed(AppRoutes.practiceComplete),
+            onCompleted: () =>
+                _nav.pushReplacementNamed(AppRoutes.practiceComplete),
           ),
           settings,
         );
@@ -205,16 +253,20 @@ class AppRouter {
         return _page(
           PracticePauseScreen(
             onResume: () => _nav.pop(),
-            onRestart: () => _nav.pushReplacementNamed(AppRoutes.practiceQuestion),
-            onExit: () => _nav.pushNamedAndRemoveUntil(AppRoutes.shell, (_) => false),
+            onRestart: () =>
+                _nav.pushReplacementNamed(AppRoutes.practiceQuestion),
+            onExit: () =>
+                _nav.pushNamedAndRemoveUntil(AppRoutes.shell, (_) => false),
           ),
           settings,
         );
       case AppRoutes.practiceComplete:
         return _page(
           PracticeCompleteScreen(
-            onPracticeAgain: () => _nav.pushReplacementNamed(AppRoutes.practiceQuestion),
-            onReturnHome: () => _nav.pushNamedAndRemoveUntil(AppRoutes.shell, (_) => false),
+            onPracticeAgain: () =>
+                _nav.pushReplacementNamed(AppRoutes.practiceQuestion),
+            onReturnHome: () =>
+                _nav.pushNamedAndRemoveUntil(AppRoutes.shell, (_) => false),
           ),
           settings,
         );
@@ -239,7 +291,8 @@ class AppRouter {
       onOpenPayments: () => _nav.pushNamed(AppRoutes.payments),
       onOpenSettings: () => _nav.pushNamed(AppRoutes.settings),
       onOpenChildProfile: () => _nav.pushNamed(AppRoutes.childProfile),
-      onOpenWorksheet: (id) => _nav.pushNamed(AppRoutes.worksheetDetails, arguments: id),
+      onOpenWorksheet: (id) =>
+          _nav.pushNamed(AppRoutes.worksheetDetails, arguments: id),
       onOpenAnnouncement: (id) =>
           _nav.pushNamed(AppRoutes.announcementDetails, arguments: id),
       onAddChild: () => _nav.pushNamed(AppRoutes.childSetup),

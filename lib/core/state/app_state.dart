@@ -18,7 +18,7 @@ import '../repositories/matrix_repository.dart';
 /// In-memory app state for the UI prototype.
 class AppState extends ChangeNotifier {
   AppState({MatrixRepository? repository})
-      : _repository = repository ?? MockMatrixRepository();
+    : _repository = repository ?? MockMatrixRepository();
 
   final MatrixRepository _repository;
 
@@ -56,12 +56,16 @@ class AppState extends ChangeNotifier {
   }
 
   int get unreadAnnouncements => announcements.where((a) => !a.isRead).length;
+  bool get isAdmin => parent?.role == 'admin';
 
-  Future<void> bootstrapAccount({bool firstTime = false}) async {
+  Future<void> bootstrapAccount({
+    String? mobile,
+    bool firstTime = false,
+  }) async {
     isBootstrapping = true;
     notifyListeners();
-    parent = await _repository.fetchParent();
-    children = await _repository.fetchChildren();
+    parent = await _repository.fetchParent(mobile: mobile);
+    children = await _repository.fetchChildren(mobile: mobile);
     selectedChildId = children.isNotEmpty ? children.first.id : null;
     announcements = await _repository.fetchAnnouncements();
     paymentPlan = await _repository.fetchPaymentPlan();
@@ -95,6 +99,10 @@ class AppState extends ChangeNotifier {
 
   Future<bool> verifyOtp(String mobile, String otp) {
     return _repository.verifyOtp(mobile: mobile, otp: otp);
+  }
+
+  Future<OtpChallenge> requestOtp(String mobile) {
+    return _repository.requestOtp(mobile: mobile);
   }
 
   void addChild(ChildProfile child) {
@@ -249,7 +257,13 @@ class AppState extends ChangeNotifier {
     final answered = session.answers.where((a) => a != null).length;
     final accuracy = answered == 0 ? 0.0 : session.correctCount / answered;
     final avgSpeed = answered == 0 ? 0.0 : session.elapsedSeconds / answered;
-    final stars = accuracy >= 0.9 ? 3 : accuracy >= 0.7 ? 2 : accuracy >= 0.5 ? 1 : 0;
+    final stars = accuracy >= 0.9
+        ? 3
+        : accuracy >= 0.7
+        ? 2
+        : accuracy >= 0.5
+        ? 1
+        : 0;
 
     lastPracticeResult = PracticeResult(
       id: 'r_${DateTime.now().millisecondsSinceEpoch}',

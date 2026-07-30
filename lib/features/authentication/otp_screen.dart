@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../../app/theme/app_spacing.dart';
+import '../../../core/repositories/matrix_repository.dart';
 import '../../../core/state/app_state.dart';
 import '../../../core/widgets/common_widgets.dart';
 
@@ -9,10 +10,12 @@ class OtpScreen extends StatefulWidget {
   const OtpScreen({
     super.key,
     required this.mobile,
+    required this.challenge,
     required this.onVerified,
   });
 
   final String mobile;
+  final OtpChallenge challenge;
   final VoidCallback onVerified;
 
   @override
@@ -22,7 +25,15 @@ class OtpScreen extends StatefulWidget {
 class _OtpScreenState extends State<OtpScreen> {
   final _controller = TextEditingController();
   bool _loading = false;
+  bool _resending = false;
+  late String _developmentOtp;
   String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _developmentOtp = widget.challenge.code;
+  }
 
   @override
   void dispose() {
@@ -46,7 +57,10 @@ class _OtpScreenState extends State<OtpScreen> {
     if (ok) {
       widget.onVerified();
     } else {
-      setState(() => _error = 'Invalid code. Try any 4–6 digits.');
+      setState(
+        () => _error =
+            'That OTP is incorrect or expired. Request a new code and try again.',
+      );
     }
   }
 
@@ -64,11 +78,26 @@ class _OtpScreenState extends State<OtpScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text('Enter verification code', style: Theme.of(context).textTheme.headlineMedium),
+              Text(
+                'Enter verification code',
+                style: Theme.of(context).textTheme.headlineMedium,
+              ),
               const SizedBox(height: 8),
               Text(
-                'Code sent to +91 $masked\nPrototype tip: any 4–6 digit OTP works.',
+                'Code sent to +91 $masked',
                 style: Theme.of(context).textTheme.bodyMedium,
+              ),
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.primaryContainer,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  'Development OTP: $_developmentOtp\nUse this code for phone testing. Production will deliver it by SMS.',
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
               ),
               const SizedBox(height: AppSpacing.xl),
               TextField(
@@ -88,19 +117,39 @@ class _OtpScreenState extends State<OtpScreen> {
               ),
               const SizedBox(height: 12),
               TextButton(
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Mock OTP resent')),
-                  );
-                },
-                child: const Text('Resend code'),
+                onPressed: _resending
+                    ? null
+                    : () async {
+                        setState(() => _resending = true);
+                        final challenge = await AppState.read(
+                          context,
+                        ).requestOtp(widget.mobile);
+                        if (!mounted) return;
+                        setState(() {
+                          _developmentOtp = challenge.code;
+                          _resending = false;
+                          _error = null;
+                        });
+                        _showResentMessage();
+                      },
+                child: Text(_resending ? 'Generating…' : 'Resend code'),
               ),
               const Spacer(),
-              AppPrimaryButton(label: 'Verify & continue', onPressed: _verify, isLoading: _loading),
+              AppPrimaryButton(
+                label: 'Verify & continue',
+                onPressed: _verify,
+                isLoading: _loading,
+              ),
             ],
           ),
         ),
       ),
+    );
+  }
+
+  void _showResentMessage() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('A new OTP has been generated.')),
     );
   }
 }

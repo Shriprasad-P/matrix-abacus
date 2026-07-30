@@ -1,9 +1,9 @@
 # Matrix Abacus — Application Architecture & Inventory
 
 **Product:** Parent-managed mathematics learning application  
-**Type:** Flutter UI/UX prototype (no real backend)  
+**Type:** Flutter mobile application with a FastAPI backend  
 **Repo:** https://github.com/Shriprasad-P/matrix-abacus  
-**Stack:** Flutter 3.x · Material 3 · Dart · local in-memory state · mock repositories  
+**Stack:** Flutter 3.x · Material 3 · Dart · FastAPI · SQLAlchemy · PostgreSQL · JWT/OTP  
 
 ---
 
@@ -16,15 +16,15 @@ Matrix Abacus helps parents manage one or more children’s abacus/maths learnin
 | **Parent** | View/switch children, progress, attendance, courses, worksheets, results, certificates, announcements, payments, settings; open practice mode |
 | **Child (practice mode)** | Daily drill, answer questions, use abacus visualizer, see feedback, score/speed/accuracy, streaks/badges, completion |
 
-### Out of scope (by design)
+### UI prototype out of scope (currently)
 
-- Real authentication / SMS OTP APIs  
-- Real payments / payment gateway  
-- Push notifications  
-- Database or remote API integration  
+- Flutter API repository integration; the app still uses mock data by default  
+- Real SMS delivery, push notifications, and payment-gateway callbacks  
 - Rankings / social comparison  
 
-All data is **local mock data** with in-memory updates for the session.
+The backend now persists application data. The Flutter client remains on local mock data until its repository implementation is switched to the backend API.
+
+The backend service is documented in [backend/README.md](backend/README.md) and exposes OpenAPI documentation at `/docs` when running.
 
 ---
 
@@ -51,6 +51,8 @@ All data is **local mock data** with in-memory updates for the session.
 │                      Mock data / models                      │
 │         MockData  +  typed domain models                     │
 └─────────────────────────────────────────────────────────────┘
+
+Backend service (backend/): FastAPI routers → SQLAlchemy models → PostgreSQL/SQLite
 ```
 
 **Principles**

@@ -7,19 +7,32 @@ import '../../../core/widgets/common_widgets.dart';
 import '../../../core/widgets/feature_cards.dart';
 
 class ChildProfileScreen extends StatelessWidget {
-  const ChildProfileScreen({super.key});
+  const ChildProfileScreen({super.key, this.onAddChild});
+
+  final VoidCallback? onAddChild;
 
   @override
   Widget build(BuildContext context) {
     final child = AppState.of(context).selectedChild;
     if (child == null) {
-      return const Scaffold(body: EmptyState(title: 'No child selected', message: 'Add a child profile to continue.'));
+      return const Scaffold(
+        body: EmptyState(
+          title: 'No child selected',
+          message: 'Add a child profile to continue.',
+        ),
+      );
     }
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Child profile'),
         actions: [
+          if (onAddChild != null)
+            IconButton(
+              tooltip: 'Add child',
+              onPressed: onAddChild,
+              icon: const Icon(Icons.person_add_alt_1_rounded),
+            ),
           TextButton(
             onPressed: () {
               ScaffoldMessenger.of(context).showSnackBar(
@@ -42,15 +55,31 @@ class ChildProfileScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 16),
-          Text(child.name, style: Theme.of(context).textTheme.headlineMedium, textAlign: TextAlign.center),
+          Text(
+            child.name,
+            style: Theme.of(context).textTheme.headlineMedium,
+            textAlign: TextAlign.center,
+          ),
           const SizedBox(height: 4),
           Text(
             'Age ${child.age} · ${child.className}',
             style: Theme.of(context).textTheme.bodyMedium,
             textAlign: TextAlign.center,
           ),
+          if (child.schoolName.isNotEmpty) ...[
+            const SizedBox(height: 4),
+            Text(
+              child.schoolName,
+              style: Theme.of(context).textTheme.bodySmall,
+              textAlign: TextAlign.center,
+            ),
+          ],
           const SizedBox(height: 20),
-          ProgressCard(title: 'Current level', progress: child.overallProgress, subtitle: child.currentLevel),
+          ProgressCard(
+            title: 'Current level',
+            progress: child.overallProgress,
+            subtitle: child.currentLevel,
+          ),
           const SizedBox(height: 12),
           Row(
             children: [
@@ -80,9 +109,23 @@ class ChildProfileScreen extends StatelessWidget {
             spacing: 8,
             runSpacing: 8,
             children: child.badges
-                .map((b) => StatusChip(label: b, color: AppColors.secondary, icon: Icons.star_rounded))
+                .map(
+                  (b) => StatusChip(
+                    label: b,
+                    color: AppColors.secondary,
+                    icon: Icons.star_rounded,
+                  ),
+                )
                 .toList(),
           ),
+          if (onAddChild != null) ...[
+            const SizedBox(height: 24),
+            AppSecondaryButton(
+              label: 'Add another child',
+              icon: Icons.person_add_alt_1_rounded,
+              onPressed: onAddChild,
+            ),
+          ],
         ],
       ),
     );

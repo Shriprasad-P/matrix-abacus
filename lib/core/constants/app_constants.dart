@@ -4,8 +4,10 @@ abstract final class AppRoutes {
   static const login = '/login';
   static const otp = '/otp';
   static const accountLoading = '/account-loading';
+  static const parentSetup = '/parent-setup';
   static const childSetup = '/child-setup';
   static const shell = '/app';
+  static const adminDashboard = '/admin';
   static const childProfile = '/child-profile';
   static const attendance = '/attendance';
   static const courses = '/courses';

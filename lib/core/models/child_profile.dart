@@ -4,6 +4,7 @@ class ChildProfile {
     required this.name,
     required this.age,
     required this.className,
+    this.schoolName = '',
     required this.avatarColor,
     required this.avatarEmoji,
     required this.currentLevel,
@@ -19,6 +20,7 @@ class ChildProfile {
   final String name;
   final int age;
   final String className;
+  final String schoolName;
   final int avatarColor;
   final String avatarEmoji;
   final String currentLevel;
@@ -39,6 +41,7 @@ class ChildProfile {
     String? name,
     int? age,
     String? className,
+    String? schoolName,
     int? streak,
     double? overallProgress,
     double? accuracy,
@@ -52,6 +55,7 @@ class ChildProfile {
       name: name ?? this.name,
       age: age ?? this.age,
       className: className ?? this.className,
+      schoolName: schoolName ?? this.schoolName,
       avatarColor: avatarColor,
       avatarEmoji: avatarEmoji,
       currentLevel: currentLevel ?? this.currentLevel,

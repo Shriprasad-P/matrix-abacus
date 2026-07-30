@@ -4,6 +4,7 @@ class Parent {
     required this.name,
     required this.mobile,
     required this.email,
+    this.role = 'parent',
     this.notificationsEnabled = true,
     this.practiceReminders = true,
     this.announcementAlerts = true,
@@ -13,6 +14,7 @@ class Parent {
   final String name;
   final String mobile;
   final String email;
+  final String role;
   final bool notificationsEnabled;
   final bool practiceReminders;
   final bool announcementAlerts;
@@ -21,6 +23,7 @@ class Parent {
     String? name,
     String? mobile,
     String? email,
+    String? role,
     bool? notificationsEnabled,
     bool? practiceReminders,
     bool? announcementAlerts,
@@ -30,6 +33,7 @@ class Parent {
       name: name ?? this.name,
       mobile: mobile ?? this.mobile,
       email: email ?? this.email,
+      role: role ?? this.role,
       notificationsEnabled: notificationsEnabled ?? this.notificationsEnabled,
       practiceReminders: practiceReminders ?? this.practiceReminders,
       announcementAlerts: announcementAlerts ?? this.announcementAlerts,

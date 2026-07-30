@@ -2,9 +2,9 @@
 
 For a full screen inventory, architecture layers, and design-system map, see **[ARCHITECTURE.md](ARCHITECTURE.md)**.
 
-Parent-managed mathematics learning app — **UI/UX Flutter prototype**.
+Parent-managed mathematics learning app — Flutter UI/UX prototype plus a FastAPI backend.
 
-No real backend, authentication APIs, payments, push notifications, or database. All data is local mock state.
+The Flutter client still defaults to local mock state. The backend is available under `backend/` and is ready to replace the mock repository with REST API calls.
 
 ## How to run
 
@@ -90,6 +90,21 @@ lib/
 3. Construct `AppState(repository: YourApiRepository())` in `lib/app/app.dart`.  
 4. Replace mock OTP in `verifyOtp` with a real auth flow; keep UI screens as-is.  
 5. Wire payments / downloads / push to real SDKs behind the same UI actions.
+
+## Backend
+
+The FastAPI backend lives in `backend/`. It provides PostgreSQL-ready persistence, OTP/JWT authentication, parent/child ownership checks, learning data, practice sessions, announcements, payments, and admin content endpoints.
+
+```bash
+cd backend
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env
+uvicorn app.main:app --reload
+```
+
+See [backend/README.md](backend/README.md) for the API flow, demo credentials, PostgreSQL setup, and production hardening checklist.
 
 UI should not need a major rewrite if the repository contract is preserved.
 

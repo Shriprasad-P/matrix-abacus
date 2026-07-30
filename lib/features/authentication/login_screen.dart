@@ -7,7 +7,7 @@ import '../../../core/widgets/common_widgets.dart';
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key, required this.onContinue});
 
-  final ValueChanged<String> onContinue;
+  final Future<void> Function(String mobile) onContinue;
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -15,6 +15,7 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final _controller = TextEditingController();
+  bool _loading = false;
   String? _error;
 
   @override
@@ -23,13 +24,30 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  void _submit() {
+  Future<void> _submit() async {
+    if (_loading) {
+      return;
+    }
     final raw = _controller.text.replaceAll(RegExp(r'\D'), '');
     if (raw.length < 10) {
       setState(() => _error = 'Enter a valid 10-digit mobile number');
       return;
     }
-    widget.onContinue(raw);
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    try {
+      await widget.onContinue(raw);
+    } catch (_) {
+      if (mounted) {
+        setState(
+          () => _error = 'We could not generate an OTP. Please try again.',
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
   }
 
   @override
@@ -42,7 +60,10 @@ class _LoginScreenState extends State<LoginScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text('Welcome back', style: Theme.of(context).textTheme.headlineMedium),
+              Text(
+                'Welcome back',
+                style: Theme.of(context).textTheme.headlineMedium,
+              ),
               const SizedBox(height: 8),
               Text(
                 'We will send a one-time code to verify your number. No password needed.',
@@ -67,7 +88,11 @@ class _LoginScreenState extends State<LoginScreen> {
                 onSubmitted: (_) => _submit(),
               ),
               const Spacer(),
-              AppPrimaryButton(label: 'Send OTP', onPressed: _submit),
+              AppPrimaryButton(
+                label: 'Send OTP',
+                onPressed: _submit,
+                isLoading: _loading,
+              ),
             ],
           ),
         ),
