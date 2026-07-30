@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../app/theme/app_colors.dart';
+import '../../../app/theme/app_dimensions.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../../app/theme/app_typography.dart';
 import '../../../core/state/app_state.dart';
@@ -81,15 +82,15 @@ class PracticeCompleteScreen extends StatelessWidget {
               if (child != null)
                 Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.all(14),
+                  padding: const EdgeInsets.all(AppSpacing.md),
                   decoration: BoxDecoration(
                     color: AppColors.secondarySoft,
-                    borderRadius: BorderRadius.circular(14),
+                    borderRadius: BorderRadius.circular(AppDimensions.radiusSm),
                   ),
                   child: Row(
                     children: [
                       const Icon(Icons.local_fire_department_rounded, color: AppColors.streak),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: AppSpacing.sm),
                       Expanded(
                         child: Text(
                           'Streak updated to ${child.streak} days',
@@ -99,6 +100,28 @@ class PracticeCompleteScreen extends StatelessWidget {
                     ],
                   ),
                 ),
+              if (child != null && child.badges.isNotEmpty) ...[
+                const SizedBox(height: AppSpacing.md),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text('Badges', style: Theme.of(context).textTheme.titleSmall),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: child.badges
+                      .take(3)
+                      .map(
+                        (b) => StatusChip(
+                          label: b,
+                          color: AppColors.secondary,
+                          icon: Icons.star_rounded,
+                        ),
+                      )
+                      .toList(),
+                ),
+              ],
               const Spacer(),
               AppPrimaryButton(
                 label: 'Practice again',

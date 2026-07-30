@@ -288,9 +288,10 @@ Parent Shell (IndexedStack + NavigationBar)
 | Confirmation dialog helper | `common_widgets.dart` |
 | Child profile card, progress/stat cards | `feature_cards.dart` |
 | Course / worksheet / announcement / certificate cards | `feature_cards.dart` |
+| Result card | `feature_cards.dart` |
 | Child switcher bottom sheet | `child_switcher.dart` |
 | Attendance calendar, weekly progress chart | `charts.dart` |
-| Abacus, answer input, practice header, success animation | `practice_widgets.dart` |
+| Abacus, answer input, practice header, success animation, practice feedback panel | `practice_widgets.dart` |
 
 ---
 

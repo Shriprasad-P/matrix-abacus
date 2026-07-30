@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../app/theme/app_colors.dart';
+import '../../../app/theme/app_dimensions.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../../core/models/enums.dart';
 import '../../../core/state/app_state.dart';
@@ -29,65 +30,97 @@ class CoursesScreen extends StatelessWidget {
                   'Current levels are highlighted. Locked levels stay visible so progress feels clear.',
                   style: Theme.of(context).textTheme.bodyMedium,
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: AppSpacing.lg),
                 ...courses.map(
                   (course) => Padding(
-                    padding: const EdgeInsets.only(bottom: 14),
+                    padding: const EdgeInsets.only(bottom: AppSpacing.lg),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         CourseCard(course: course),
-                        const SizedBox(height: 10),
+                        const SizedBox(height: AppSpacing.sm),
                         ...course.levels.map((level) {
                           final isCurrent = level.state == LevelState.current;
                           final locked = level.state == LevelState.locked;
-                          return Container(
-                            margin: const EdgeInsets.only(bottom: 8),
-                            padding: const EdgeInsets.all(14),
-                            decoration: BoxDecoration(
+                          final completed = level.state == LevelState.completed;
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                            child: Material(
                               color: isCurrent
                                   ? AppColors.primary.withValues(alpha: 0.08)
                                   : AppColors.surface,
-                              borderRadius: BorderRadius.circular(14),
-                              border: Border.all(
-                                color: isCurrent ? AppColors.primary : AppColors.outline,
-                                width: isCurrent ? 1.5 : 1,
-                              ),
-                            ),
-                            child: Row(
-                              children: [
-                                Icon(
-                                  locked
-                                      ? Icons.lock_rounded
-                                      : level.state == LevelState.completed
-                                          ? Icons.check_circle_rounded
-                                          : Icons.play_circle_outline_rounded,
-                                  color: locked
-                                      ? AppColors.locked
-                                      : isCurrent
-                                          ? AppColors.primary
-                                          : AppColors.success,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(AppDimensions.radiusSm),
+                                side: BorderSide(
+                                  color: isCurrent ? AppColors.primary : AppColors.outline,
+                                  width: isCurrent ? 1.5 : 1,
                                 ),
-                                const SizedBox(width: 10),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                              ),
+                              child: InkWell(
+                                borderRadius: BorderRadius.circular(AppDimensions.radiusSm),
+                                onTap: () {
+                                  final message = locked
+                                      ? 'Complete earlier levels to unlock ${level.title}.'
+                                      : isCurrent
+                                          ? '${level.title} is the current level.'
+                                          : completed
+                                              ? '${level.title} is completed.'
+                                              : '${level.title} is unlocked and ready.';
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text(message)),
+                                  );
+                                },
+                                child: Padding(
+                                  padding: const EdgeInsets.all(AppSpacing.md),
+                                  child: Row(
                                     children: [
-                                      Text(level.title, style: Theme.of(context).textTheme.titleSmall),
-                                      if (level.state == LevelState.current ||
-                                          level.state == LevelState.completed)
-                                        Text(
-                                          '${(level.progress * 100).round()}% complete',
-                                          style: Theme.of(context).textTheme.bodySmall,
+                                      Icon(
+                                        locked
+                                            ? Icons.lock_rounded
+                                            : completed
+                                                ? Icons.check_circle_rounded
+                                                : Icons.play_circle_outline_rounded,
+                                        color: locked
+                                            ? AppColors.locked
+                                            : isCurrent
+                                                ? AppColors.primary
+                                                : AppColors.success,
+                                      ),
+                                      const SizedBox(width: AppSpacing.sm),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text(level.title, style: Theme.of(context).textTheme.titleSmall),
+                                            if (!locked)
+                                              Text(
+                                                '${(level.progress * 100).round()}% complete',
+                                                style: Theme.of(context).textTheme.bodySmall,
+                                              ),
+                                          ],
                                         ),
+                                      ),
+                                      StatusChip(
+                                        label: levelStateLabel(level.state),
+                                        color: locked
+                                            ? AppColors.locked
+                                            : isCurrent
+                                                ? AppColors.primary
+                                                : completed
+                                                    ? AppColors.success
+                                                    : AppColors.warning,
+                                        icon: locked
+                                            ? Icons.lock_outline
+                                            : completed
+                                                ? Icons.check_rounded
+                                                : isCurrent
+                                                    ? Icons.play_arrow_rounded
+                                                    : Icons.lock_open_rounded,
+                                      ),
                                     ],
                                   ),
                                 ),
-                                StatusChip(
-                                  label: level.state.name,
-                                  color: locked ? AppColors.locked : AppColors.primary,
-                                ),
-                              ],
+                              ),
                             ),
                           );
                         }),

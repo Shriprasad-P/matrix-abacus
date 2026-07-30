@@ -45,6 +45,7 @@ class AppState extends ChangeNotifier {
 
   UiDemoState worksheetsDemoState = UiDemoState.normal;
   UiDemoState certificatesDemoState = UiDemoState.normal;
+  UiDemoState resultsDemoState = UiDemoState.normal;
 
   Timer? _practiceTimer;
 
@@ -128,6 +129,11 @@ class AppState extends ChangeNotifier {
 
   void setCertificatesDemoState(UiDemoState state) {
     certificatesDemoState = state;
+    notifyListeners();
+  }
+
+  void setResultsDemoState(UiDemoState state) {
+    resultsDemoState = state;
     notifyListeners();
   }
 

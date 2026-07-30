@@ -90,7 +90,12 @@ class AppRouter {
       case AppRoutes.childSetup:
         return _page(
           ChildSetupScreen(
-            onDone: () => _nav.pushNamedAndRemoveUntil(AppRoutes.shell, (_) => false),
+            onDone: () {
+              if (_nav.canPop()) {
+                _nav.pop();
+              }
+              _nav.pushNamedAndRemoveUntil(AppRoutes.shell, (_) => false);
+            },
           ),
           settings,
         );
@@ -237,6 +242,7 @@ class AppRouter {
       onOpenWorksheet: (id) => _nav.pushNamed(AppRoutes.worksheetDetails, arguments: id),
       onOpenAnnouncement: (id) =>
           _nav.pushNamed(AppRoutes.announcementDetails, arguments: id),
+      onAddChild: () => _nav.pushNamed(AppRoutes.childSetup),
     );
   }
 

@@ -5,6 +5,7 @@ import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_dimensions.dart';
 import '../../app/theme/app_spacing.dart';
 import '../../app/theme/app_typography.dart';
+import '../models/enums.dart';
 
 /// Interactive-looking abacus with 5 rods (local mock interactions).
 class AbacusVisualizer extends StatefulWidget {
@@ -262,27 +263,34 @@ class AnswerInput extends StatelessWidget {
     required this.controller,
     required this.onSubmitted,
     this.enabled = true,
+    this.focusNode,
   });
 
   final TextEditingController controller;
   final ValueChanged<String> onSubmitted;
   final bool enabled;
+  final FocusNode? focusNode;
 
   @override
   Widget build(BuildContext context) {
-    return TextField(
-      controller: controller,
-      enabled: enabled,
-      keyboardType: TextInputType.number,
-      textInputAction: TextInputAction.done,
-      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-      style: AppTypography.stat(),
-      textAlign: TextAlign.center,
-      decoration: const InputDecoration(
-        hintText: 'Your answer',
-        prefixIcon: Icon(Icons.edit_rounded),
+    return Semantics(
+      label: 'Answer input',
+      textField: true,
+      child: TextField(
+        controller: controller,
+        focusNode: focusNode,
+        enabled: enabled,
+        keyboardType: TextInputType.number,
+        textInputAction: TextInputAction.done,
+        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+        style: AppTypography.stat(),
+        textAlign: TextAlign.center,
+        decoration: const InputDecoration(
+          hintText: 'Your answer',
+          prefixIcon: Icon(Icons.edit_rounded),
+        ),
+        onSubmitted: onSubmitted,
       ),
-      onSubmitted: onSubmitted,
     );
   }
 }
@@ -379,6 +387,60 @@ class SuccessStateView extends StatelessWidget {
         const SizedBox(height: 8),
         Text(message, style: Theme.of(context).textTheme.bodyMedium, textAlign: TextAlign.center),
       ],
+    );
+  }
+}
+
+/// Correct / incorrect feedback panel for practice answers.
+class PracticeFeedbackPanel extends StatelessWidget {
+  const PracticeFeedbackPanel({
+    super.key,
+    required this.feedback,
+    required this.correctAnswer,
+  });
+
+  final AnswerFeedback feedback;
+  final int correctAnswer;
+
+  @override
+  Widget build(BuildContext context) {
+    if (feedback == AnswerFeedback.none) return const SizedBox.shrink();
+
+    final correct = feedback == AnswerFeedback.correct;
+    return Semantics(
+      liveRegion: true,
+      label: correct ? 'Correct answer' : 'Incorrect. Correct answer is $correctAnswer',
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 250),
+        width: double.infinity,
+        padding: const EdgeInsets.all(AppSpacing.md),
+        decoration: BoxDecoration(
+          color: correct ? AppColors.successSoft : AppColors.errorSoft,
+          borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+          border: Border.all(
+            color: correct ? AppColors.success.withValues(alpha: 0.35) : AppColors.error.withValues(alpha: 0.35),
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              correct ? Icons.check_circle_rounded : Icons.cancel_rounded,
+              color: correct ? AppColors.success : AppColors.error,
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            Expanded(
+              child: Text(
+                correct
+                    ? 'Nice! That’s correct.'
+                    : 'Not quite — the answer is $correctAnswer. Keep going!',
+                style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      color: correct ? AppColors.success : AppColors.error,
+                    ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

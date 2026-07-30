@@ -9,6 +9,7 @@ import '../models/certificate.dart';
 import '../models/child_profile.dart';
 import '../models/course.dart';
 import '../models/enums.dart';
+import '../models/result.dart';
 import '../models/worksheet.dart';
 import 'common_widgets.dart';
 
@@ -19,67 +20,100 @@ class ChildProfileCard extends StatelessWidget {
     this.onTap,
     this.onSwitch,
     this.compact = false,
+    this.selected = true,
   });
 
   final ChildProfile child;
   final VoidCallback? onTap;
   final VoidCallback? onSwitch;
   final bool compact;
+  final bool selected;
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: AppColors.surface,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
-        side: const BorderSide(color: AppColors.outline),
-      ),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.cardPadding),
-          child: Row(
-            children: [
-              AppAvatar(
-                initials: child.initials,
-                color: Color(child.avatarColor),
-                emoji: child.avatarEmoji,
-                size: compact ? AppDimensions.avatarSm : AppDimensions.avatarMd,
-              ),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(child.name, style: Theme.of(context).textTheme.titleMedium),
-                    const SizedBox(height: 2),
-                    Text(
-                      '${child.className} · ${child.currentLevel}',
-                      style: Theme.of(context).textTheme.bodySmall,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    if (!compact) ...[
-                      const SizedBox(height: 8),
+    return Semantics(
+      label: 'Selected child ${child.name}',
+      button: onTap != null,
+      child: Material(
+        color: selected ? AppColors.primary.withValues(alpha: 0.06) : AppColors.surface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+          side: BorderSide(
+            color: selected ? AppColors.primary : AppColors.outline,
+            width: selected ? 1.5 : 1,
+          ),
+        ),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.cardPadding),
+            child: Row(
+              children: [
+                AppAvatar(
+                  initials: child.initials,
+                  color: Color(child.avatarColor),
+                  emoji: child.avatarEmoji,
+                  size: compact ? AppDimensions.avatarSm : AppDimensions.avatarMd,
+                ),
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
                       Row(
                         children: [
-                          const Icon(Icons.local_fire_department_rounded, size: 16, color: AppColors.streak),
-                          const SizedBox(width: 4),
-                          Text('${child.streak} day streak', style: Theme.of(context).textTheme.labelMedium),
+                          Flexible(
+                            child: Text(
+                              child.name,
+                              style: Theme.of(context).textTheme.titleMedium,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          if (selected) ...[
+                            const SizedBox(width: 8),
+                            const StatusChip(
+                              label: 'Selected',
+                              color: AppColors.primary,
+                              icon: Icons.check_circle_rounded,
+                            ),
+                          ],
                         ],
                       ),
+                      const SizedBox(height: 2),
+                      Text(
+                        '${child.className} · ${child.currentLevel}',
+                        style: Theme.of(context).textTheme.bodySmall,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      if (!compact) ...[
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            const Icon(Icons.local_fire_department_rounded, size: 16, color: AppColors.streak),
+                            const SizedBox(width: 4),
+                            Flexible(
+                              child: Text(
+                                '${child.streak} day streak',
+                                style: Theme.of(context).textTheme.labelMedium,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                     ],
-                  ],
+                  ),
                 ),
-              ),
-              if (onSwitch != null)
-                IconButton(
-                  tooltip: 'Switch child',
-                  onPressed: onSwitch,
-                  icon: const Icon(Icons.swap_horiz_rounded),
-                ),
-            ],
+                if (onSwitch != null)
+                  IconButton(
+                    tooltip: 'Switch child',
+                    onPressed: onSwitch,
+                    icon: const Icon(Icons.swap_horiz_rounded),
+                  ),
+              ],
+            ),
           ),
         ),
       ),
@@ -490,5 +524,108 @@ class CertificateCard extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+class ResultCard extends StatelessWidget {
+  const ResultCard({super.key, required this.result, this.onTap});
+
+  final PracticeResult result;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: AppColors.surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+        side: const BorderSide(color: AppColors.outline),
+      ),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.cardPadding),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(result.title, style: Theme.of(context).textTheme.titleMedium),
+                  ),
+                  Text(
+                    '${result.date.day}/${result.date.month}',
+                    style: Theme.of(context).textTheme.labelMedium,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 4),
+              Text(result.topic, style: Theme.of(context).textTheme.bodySmall),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: StatCard(
+                      label: 'Score',
+                      value: '${result.score}/${result.total}',
+                      color: AppColors.primary,
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  Expanded(
+                    child: StatCard(
+                      label: 'Accuracy',
+                      value: '${(result.accuracy * 100).round()}%',
+                      color: AppColors.success,
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  Expanded(
+                    child: StatCard(
+                      label: 'Speed',
+                      value: '${result.avgSpeedSeconds.toStringAsFixed(1)}s',
+                      color: AppColors.warning,
+                    ),
+                  ),
+                ],
+              ),
+              if (result.teacherFeedback != null) ...[
+                const SizedBox(height: AppSpacing.md),
+                Text('Teacher feedback', style: Theme.of(context).textTheme.titleSmall),
+                const SizedBox(height: 4),
+                Text(result.teacherFeedback!, style: Theme.of(context).textTheme.bodyMedium),
+              ],
+              const SizedBox(height: AppSpacing.sm),
+              Semantics(
+                label: '${result.stars} of 3 stars',
+                child: Row(
+                  children: List.generate(
+                    3,
+                    (i) => Icon(
+                      i < result.stars ? Icons.star_rounded : Icons.star_border_rounded,
+                      color: AppColors.secondary,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+String levelStateLabel(LevelState state) {
+  switch (state) {
+    case LevelState.completed:
+      return 'Completed';
+    case LevelState.current:
+      return 'Current';
+    case LevelState.unlocked:
+      return 'Unlocked';
+    case LevelState.locked:
+      return 'Locked';
   }
 }

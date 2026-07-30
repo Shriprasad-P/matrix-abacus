@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../app/theme/app_colors.dart';
+import '../../../app/theme/app_dimensions.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/state/app_state.dart';
@@ -22,6 +23,9 @@ class DashboardScreen extends StatelessWidget {
     required this.onOpenWorksheet,
     required this.onOpenAnnouncement,
     required this.onSwitchToPracticeTab,
+    required this.onSwitchToProgressTab,
+    required this.onSwitchToWorksheetsTab,
+    this.onAddChild,
   });
 
   final VoidCallback onOpenPractice;
@@ -35,6 +39,9 @@ class DashboardScreen extends StatelessWidget {
   final ValueChanged<String> onOpenWorksheet;
   final ValueChanged<String> onOpenAnnouncement;
   final VoidCallback onSwitchToPracticeTab;
+  final VoidCallback onSwitchToProgressTab;
+  final VoidCallback onSwitchToWorksheetsTab;
+  final VoidCallback? onAddChild;
 
   Future<void> _switchChild(BuildContext context) async {
     final state = AppState.read(context);
@@ -42,13 +49,16 @@ class DashboardScreen extends StatelessWidget {
       context: context,
       children: state.children,
       selectedId: state.selectedChildId,
-      onAddChild: () {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Use More → Settings to manage profiles, or re-run setup.')),
-        );
-      },
+      onAddChild: onAddChild,
     );
-    if (id != null) await state.selectChild(id);
+    if (id != null) {
+      await state.selectChild(id);
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Switched to ${state.selectedChild?.name ?? 'child'}')),
+        );
+      }
+    }
   }
 
   @override
@@ -68,10 +78,7 @@ class DashboardScreen extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      _greeting(),
-                      style: Theme.of(context).textTheme.bodyMedium,
-                    ),
+                    Text(_greeting(), style: Theme.of(context).textTheme.bodyMedium),
                     Text(
                       parent?.name.split(' ').first ?? 'Parent',
                       style: Theme.of(context).textTheme.headlineMedium,
@@ -94,30 +101,46 @@ class DashboardScreen extends StatelessWidget {
           if (child != null)
             ChildProfileCard(
               child: child,
+              selected: true,
               onTap: onOpenChildProfile,
               onSwitch: () => _switchChild(context),
+            )
+          else
+            EmptyState(
+              title: 'No child selected',
+              message: 'Add a child profile to see progress and practice.',
+              actionLabel: 'Add child',
+              onAction: onAddChild,
             ),
           const SizedBox(height: AppSpacing.sectionGap),
           if (child != null) ...[
-            ProgressCard(
-              title: 'Overall progress',
-              progress: child.overallProgress,
-              subtitle: child.currentCourse,
+            InkWell(
+              onTap: onSwitchToProgressTab,
+              borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+              child: ProgressCard(
+                title: 'Overall progress',
+                progress: child.overallProgress,
+                subtitle: child.currentCourse,
+              ),
             ),
             const SizedBox(height: AppSpacing.md),
             Row(
               children: [
                 Expanded(
-                  child: StatCard(
-                    label: 'Attendance',
-                    value: state.attendance == null
-                        ? '—'
-                        : '${(state.attendance!.percentage * 100).round()}%',
-                    icon: Icons.event_available_rounded,
-                    color: AppColors.success,
+                  child: InkWell(
+                    onTap: onOpenAttendance,
+                    borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+                    child: StatCard(
+                      label: 'Attendance',
+                      value: state.attendance == null
+                          ? '—'
+                          : '${(state.attendance!.percentage * 100).round()}%',
+                      icon: Icons.event_available_rounded,
+                      color: AppColors.success,
+                    ),
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: AppSpacing.md),
                 Expanded(
                   child: StatCard(
                     label: 'Streak',
@@ -131,43 +154,59 @@ class DashboardScreen extends StatelessWidget {
           ],
           const SizedBox(height: AppSpacing.sectionGap),
           _SectionTitle(title: 'Daily practice', actionLabel: 'Open', onAction: onSwitchToPracticeTab),
-          const SizedBox(height: 8),
-          Material(
-            color: AppColors.primary,
-            borderRadius: BorderRadius.circular(18),
-            child: InkWell(
-              onTap: onOpenPractice,
-              borderRadius: BorderRadius.circular(18),
-              child: Padding(
-                padding: const EdgeInsets.all(18),
-                child: Row(
-                  children: [
-                    const Icon(Icons.play_circle_filled_rounded, color: Colors.white, size: 40),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            state.dailyActivity?.title ?? 'Daily Drill',
-                            style: Theme.of(context).textTheme.titleMedium?.copyWith(color: Colors.white),
-                          ),
-                          Text(
-                            '~${state.dailyActivity?.estimatedMinutes ?? 8} min · Encouraging practice for ${child?.name.split(' ').first ?? 'your child'}',
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.white70),
-                          ),
-                        ],
+          const SizedBox(height: AppSpacing.sm),
+          Semantics(
+            button: true,
+            label: 'Start daily practice',
+            child: Material(
+              color: AppColors.primary,
+              borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+              child: InkWell(
+                onTap: onOpenPractice,
+                borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+                child: Padding(
+                  padding: const EdgeInsets.all(AppSpacing.lg),
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.play_circle_filled_rounded,
+                        color: AppColors.textOnPrimary,
+                        size: 40,
                       ),
-                    ),
-                    const Icon(Icons.chevron_right_rounded, color: Colors.white),
-                  ],
+                      const SizedBox(width: AppSpacing.md),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              state.dailyActivity?.title ?? 'Daily Drill',
+                              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                    color: AppColors.textOnPrimary,
+                                  ),
+                            ),
+                            Text(
+                              '~${state.dailyActivity?.estimatedMinutes ?? 8} min · for ${child?.name.split(' ').first ?? 'your child'}',
+                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: AppColors.textOnPrimary.withValues(alpha: 0.8),
+                                  ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const Icon(Icons.chevron_right_rounded, color: AppColors.textOnPrimary),
+                    ],
+                  ),
                 ),
               ),
             ),
           ),
           const SizedBox(height: AppSpacing.sectionGap),
-          _SectionTitle(title: 'Recent worksheets', actionLabel: 'See all', onAction: () {}),
-          const SizedBox(height: 8),
+          _SectionTitle(
+            title: 'Recent worksheets',
+            actionLabel: 'See all',
+            onAction: onSwitchToWorksheetsTab,
+          ),
+          const SizedBox(height: AppSpacing.sm),
           if (state.worksheets.isEmpty)
             const EmptyState(
               title: 'No worksheets yet',
@@ -177,7 +216,7 @@ class DashboardScreen extends StatelessWidget {
           else
             ...state.worksheets.take(2).map(
                   (w) => Padding(
-                    padding: const EdgeInsets.only(bottom: 10),
+                    padding: const EdgeInsets.only(bottom: AppSpacing.sm),
                     child: WorksheetCard(
                       worksheet: w,
                       onTap: () => onOpenWorksheet(w.id),
@@ -195,24 +234,31 @@ class DashboardScreen extends StatelessWidget {
             actionLabel: 'View',
             onAction: onOpenAnnouncements,
           ),
-          const SizedBox(height: 8),
-          ...state.announcements.take(2).map(
-                (a) => Padding(
-                  padding: const EdgeInsets.only(bottom: 10),
-                  child: AnnouncementCard(
-                    announcement: a,
-                    onTap: () => onOpenAnnouncement(a.id),
+          const SizedBox(height: AppSpacing.sm),
+          if (state.announcements.isEmpty)
+            const EmptyState(
+              title: 'No announcements',
+              message: 'Centre updates will show up here.',
+              icon: Icons.notifications_none_rounded,
+            )
+          else
+            ...state.announcements.take(2).map(
+                  (a) => Padding(
+                    padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                    child: AnnouncementCard(
+                      announcement: a,
+                      onTap: () => onOpenAnnouncement(a.id),
+                    ),
                   ),
                 ),
-              ),
           const SizedBox(height: AppSpacing.sectionGap),
           Text('Quick actions', style: Theme.of(context).textTheme.titleMedium),
-          const SizedBox(height: 10),
+          const SizedBox(height: AppSpacing.sm),
           Wrap(
             spacing: 10,
             runSpacing: 10,
             children: [
-              _QuickAction(icon: Icons.insights_rounded, label: 'Progress', onTap: () {}),
+              _QuickAction(icon: Icons.insights_rounded, label: 'Progress', onTap: onSwitchToProgressTab),
               _QuickAction(icon: Icons.event_available_rounded, label: 'Attendance', onTap: onOpenAttendance),
               _QuickAction(icon: Icons.menu_book_rounded, label: 'Courses', onTap: onOpenCourses),
               _QuickAction(icon: Icons.emoji_events_outlined, label: 'Results', onTap: onOpenResults),
@@ -220,7 +266,7 @@ class DashboardScreen extends StatelessWidget {
               _QuickAction(icon: Icons.payments_outlined, label: 'Payments', onTap: onOpenPayments),
             ],
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: AppSpacing.xl),
           Text(
             AppConstants.appName,
             style: Theme.of(context).textTheme.labelSmall,
@@ -272,20 +318,29 @@ class _QuickAction extends StatelessWidget {
       child: Material(
         color: AppColors.surface,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(AppDimensions.radiusSm),
           side: const BorderSide(color: AppColors.outline),
         ),
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(14),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
-            child: Column(
-              children: [
-                Icon(icon, color: AppColors.primary),
-                const SizedBox(height: 6),
-                Text(label, style: Theme.of(context).textTheme.labelMedium, textAlign: TextAlign.center),
-              ],
+          borderRadius: BorderRadius.circular(AppDimensions.radiusSm),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: AppDimensions.minTouchTarget),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
+              child: Column(
+                children: [
+                  Icon(icon, color: AppColors.primary),
+                  const SizedBox(height: 6),
+                  Text(
+                    label,
+                    style: Theme.of(context).textTheme.labelMedium,
+                    textAlign: TextAlign.center,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
             ),
           ),
         ),

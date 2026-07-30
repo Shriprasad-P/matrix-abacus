@@ -43,7 +43,7 @@ class PracticePauseScreen extends StatelessWidget {
                 },
               ),
               const SizedBox(height: 10),
-              AppPrimaryButton(
+              AppSecondaryButton(
                 label: 'Restart',
                 icon: Icons.refresh_rounded,
                 onPressed: () async {

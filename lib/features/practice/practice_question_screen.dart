@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 
 import '../../../app/theme/app_colors.dart';
+import '../../../app/theme/app_dimensions.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../../app/theme/app_typography.dart';
+import '../../../core/constants/app_constants.dart';
 import '../../../core/models/enums.dart';
 import '../../../core/state/app_state.dart';
 import '../../../core/widgets/common_widgets.dart';
@@ -24,11 +26,13 @@ class PracticeQuestionScreen extends StatefulWidget {
 
 class _PracticeQuestionScreenState extends State<PracticeQuestionScreen> {
   final _answerController = TextEditingController();
+  final _answerFocus = FocusNode();
   bool _submitting = false;
 
   @override
   void dispose() {
     _answerController.dispose();
+    _answerFocus.dispose();
     super.dispose();
   }
 
@@ -39,8 +43,9 @@ class _PracticeQuestionScreenState extends State<PracticeQuestionScreen> {
     if (answer == null) return;
 
     setState(() => _submitting = true);
+    _answerFocus.unfocus();
     await state.submitAnswer(answer);
-    await Future<void>.delayed(const Duration(milliseconds: 900));
+    await Future<void>.delayed(const Duration(milliseconds: 1100));
     if (!mounted) return;
 
     _answerController.clear();
@@ -49,14 +54,11 @@ class _PracticeQuestionScreenState extends State<PracticeQuestionScreen> {
     final session = state.practiceSession;
     if (session == null) return;
 
-    if (session.currentIndex + 1 >= session.total && session.feedback != AnswerFeedback.none) {
-      state.advanceQuestion();
+    state.advanceQuestion();
+    if (state.practiceSession?.isComplete == true) {
       widget.onCompleted();
-    } else {
-      state.advanceQuestion();
-      if (state.practiceSession?.isComplete == true) {
-        widget.onCompleted();
-      }
+    } else if (mounted) {
+      _answerFocus.requestFocus();
     }
   }
 
@@ -70,7 +72,7 @@ class _PracticeQuestionScreenState extends State<PracticeQuestionScreen> {
     );
     if (ok && context.mounted) {
       state.endPractice();
-      Navigator.of(context).pushNamedAndRemoveUntil('/app', (_) => false);
+      Navigator.of(context).pushNamedAndRemoveUntil(AppRoutes.shell, (_) => false);
     }
   }
 
@@ -78,9 +80,17 @@ class _PracticeQuestionScreenState extends State<PracticeQuestionScreen> {
   Widget build(BuildContext context) {
     final state = AppState.of(context);
     final session = state.practiceSession;
+    final bottomInset = MediaQuery.viewInsetsOf(context).bottom;
 
     if (session == null) {
-      return const Scaffold(body: Center(child: Text('No active session')));
+      return Scaffold(
+        body: EmptyState(
+          title: 'No active session',
+          message: 'Start practice again from the Practice tab.',
+          actionLabel: 'Back',
+          onAction: () => Navigator.of(context).pushNamedAndRemoveUntil(AppRoutes.shell, (_) => false),
+        ),
+      );
     }
 
     if (session.isComplete) {
@@ -97,11 +107,17 @@ class _PracticeQuestionScreenState extends State<PracticeQuestionScreen> {
         if (!didPop) _confirmExit(context, state);
       },
       child: Scaffold(
+        resizeToAvoidBottomInset: true,
         body: Container(
           decoration: const BoxDecoration(gradient: AppColors.practiceGradient),
           child: SafeArea(
             child: Padding(
-              padding: const EdgeInsets.all(AppSpacing.screenPadding),
+              padding: EdgeInsets.fromLTRB(
+                AppSpacing.screenPadding,
+                AppSpacing.screenPadding,
+                AppSpacing.screenPadding,
+                AppSpacing.screenPadding + bottomInset * 0.05,
+              ),
               child: Column(
                 children: [
                   PracticeQuestionHeader(
@@ -113,16 +129,17 @@ class _PracticeQuestionScreenState extends State<PracticeQuestionScreen> {
                       widget.onPaused();
                     },
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: AppSpacing.lg),
                   Expanded(
                     child: ListView(
+                      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
                       children: [
                         Container(
                           width: double.infinity,
-                          padding: const EdgeInsets.all(24),
+                          padding: const EdgeInsets.all(AppSpacing.xl),
                           decoration: BoxDecoration(
                             color: AppColors.surface,
-                            borderRadius: BorderRadius.circular(20),
+                            borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
                             border: Border.all(color: AppColors.outline),
                           ),
                           child: Column(
@@ -132,7 +149,7 @@ class _PracticeQuestionScreenState extends State<PracticeQuestionScreen> {
                                 style: AppTypography.score(),
                                 textAlign: TextAlign.center,
                               ),
-                              const SizedBox(height: 8),
+                              const SizedBox(height: AppSpacing.sm),
                               Text(
                                 '${q.operands.join(' ${q.operatorSymbol} ')} = ?',
                                 style: Theme.of(context).textTheme.titleMedium,
@@ -140,51 +157,19 @@ class _PracticeQuestionScreenState extends State<PracticeQuestionScreen> {
                             ],
                           ),
                         ),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: AppSpacing.lg),
                         const AbacusVisualizer(),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: AppSpacing.lg),
                         AnswerInput(
                           controller: _answerController,
+                          focusNode: _answerFocus,
                           enabled: !_submitting && feedback == AnswerFeedback.none,
                           onSubmitted: (_) => _submit(state),
                         ),
-                        const SizedBox(height: 12),
-                        AnimatedSwitcher(
-                          duration: const Duration(milliseconds: 250),
-                          child: feedback == AnswerFeedback.none
-                              ? const SizedBox.shrink()
-                              : Container(
-                                  key: ValueKey(feedback),
-                                  width: double.infinity,
-                                  padding: const EdgeInsets.all(14),
-                                  decoration: BoxDecoration(
-                                    color: feedback == AnswerFeedback.correct
-                                        ? AppColors.successSoft
-                                        : AppColors.errorSoft,
-                                    borderRadius: BorderRadius.circular(14),
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      Icon(
-                                        feedback == AnswerFeedback.correct
-                                            ? Icons.check_circle_rounded
-                                            : Icons.cancel_rounded,
-                                        color: feedback == AnswerFeedback.correct
-                                            ? AppColors.success
-                                            : AppColors.error,
-                                      ),
-                                      const SizedBox(width: 8),
-                                      Expanded(
-                                        child: Text(
-                                          feedback == AnswerFeedback.correct
-                                              ? 'Nice! That’s correct.'
-                                              : 'Not quite — the answer is ${q.correctAnswer}. Keep going!',
-                                          style: Theme.of(context).textTheme.titleSmall,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
+                        const SizedBox(height: AppSpacing.md),
+                        PracticeFeedbackPanel(
+                          feedback: feedback,
+                          correctAnswer: q.correctAnswer,
                         ),
                       ],
                     ),

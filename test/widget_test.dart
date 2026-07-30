@@ -30,11 +30,37 @@ void main() {
 
     await tester.enterText(find.byType(TextField), '1234');
     await tester.tap(find.text('Verify & continue'));
-    await tester.pump(); // start loading
+    await tester.pump();
     await tester.pump(const Duration(milliseconds: 1200));
     await tester.pumpAndSettle();
 
     expect(find.text('Home'), findsOneWidget);
     expect(find.textContaining('Priya'), findsWidgets);
+    expect(find.text('Selected'), findsWidgets);
+  });
+
+  testWidgets('Bottom navigation reaches Progress and Worksheets', (tester) async {
+    await tester.pumpWidget(const MatrixAbacusApp());
+    await tester.pump(const Duration(milliseconds: 1800));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('I already have an account'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField), '9876543210');
+    await tester.tap(find.text('Send OTP'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField), '1234');
+    await tester.tap(find.text('Verify & continue'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 1200));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Progress'));
+    await tester.pumpAndSettle();
+    expect(find.text('Overall progress'), findsWidgets);
+
+    await tester.tap(find.text('Worksheets'));
+    await tester.pumpAndSettle();
+    expect(find.text('Worksheets'), findsWidgets);
   });
 }
