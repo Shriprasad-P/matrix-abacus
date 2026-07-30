@@ -1,5 +1,7 @@
 # Matrix Abacus
 
+For a full screen inventory, architecture layers, and design-system map, see **[ARCHITECTURE.md](ARCHITECTURE.md)**.
+
 Parent-managed mathematics learning app — **UI/UX Flutter prototype**.
 
 No real backend, authentication APIs, payments, push notifications, or database. All data is local mock state.
@@ -10,7 +12,7 @@ No real backend, authentication APIs, payments, push notifications, or database.
 # Ensure Flutter is on PATH (example after local SDK install)
 export PATH="$PATH:$HOME/development/flutter/bin"
 
-cd "MatrixAbacus Application"
+cd "/Users/shriprasad/Documents/Projects/MatrixAbacusApplication"
 flutter pub get
 flutter run
 ```
