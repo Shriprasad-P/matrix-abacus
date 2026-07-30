@@ -186,21 +186,22 @@ class ProgressChart extends StatelessWidget {
           Text('Minutes practiced', style: Theme.of(context).textTheme.bodySmall),
           const SizedBox(height: 16),
           SizedBox(
-            height: 140,
+            height: 160,
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: points.map((p) {
-                final h = (p.minutes / max) * 110;
+                final h = (p.minutes / max) * 96;
                 return Expanded(
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 4),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.end,
+                      mainAxisSize: MainAxisSize.min,
                       children: [
                         Text('${p.minutes}', style: Theme.of(context).textTheme.labelSmall),
                         const SizedBox(height: 4),
                         Container(
-                          height: h.clamp(8, 110),
+                          height: h.clamp(8, 96),
                           decoration: BoxDecoration(
                             color: AppColors.primary.withValues(alpha: 0.85),
                             borderRadius: BorderRadius.circular(8),
